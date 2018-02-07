@@ -2,6 +2,8 @@ package counter;
 
 import filter.FileFilter;
 import filter.NullFileFilter;
+import option.CounterOption;
+import option.CounterOptionHandler;
 import utils.ObjectUtils;
 
 import java.io.*;
@@ -9,7 +11,9 @@ import java.util.Arrays;
 
 public class CodeCounter extends BaseCodeCounter{
     private File currentFile;
-    private StringBuffer countMessage;
+    private StringBuffer mCountMessage;
+    private CounterOption mCounterOption;
+    private int totalCount = 0;
 
     public void init() {
         init(".");
@@ -18,7 +22,11 @@ public class CodeCounter extends BaseCodeCounter{
     public void init(String path) {
         super.init();
         currentFile = new File(path);
-        countMessage = new StringBuffer();
+        mCountMessage = new StringBuffer();
+    }
+
+    public void setCounterOption(CounterOption counterOption) {
+        mCounterOption = counterOption;
     }
 
     public void count() {
@@ -27,7 +35,9 @@ public class CodeCounter extends BaseCodeCounter{
 
     public void count(FileFilter fileFilter) {
         traverseFile(currentFile, fileFilter);
-        notifyCodeCountListenerCountMessage(countMessage.toString());
+        addTotalCount(mCountMessage);
+        notifyCodeCountListenerCountMessage(mCountMessage.toString());
+        handleCounterOption(mCounterOption, mCountMessage.toString());
     }
 
     private void traverseFile(File file, FileFilter fileFilter) {
@@ -44,7 +54,7 @@ public class CodeCounter extends BaseCodeCounter{
     }
 
     private void countFile(File file) {
-        countMessage.append(file.getName()).append(" : ").append(countLine(file)).append("\n");
+        mCountMessage.append(file.getName()).append(" : ").append(countLine(file)).append("\n");
     }
 
     private String countLine(File file) {
@@ -53,10 +63,19 @@ public class CodeCounter extends BaseCodeCounter{
             LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
             while((lineNumberReader.readLine()) != null) {
                 count++;
+                totalCount++;
             }
         } catch (IOException e) {
             notifyCodeCountListenerErrorMessage(e.getMessage());
         }
         return String.valueOf(count);
+    }
+
+    private void addTotalCount(StringBuffer mCountMessage) {
+        mCountMessage.append("Total line count : ").append(totalCount);
+    }
+
+    private void handleCounterOption(CounterOption counterOption, String countMessage) {
+        new CounterOptionHandler().handle(counterOption, countMessage);
     }
 }
