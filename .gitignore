@@ -1,0 +1,22 @@
+# local metadata
+.metadata
+
+# generated files
+bin/
+
+# files for dex vm
+*.class
+*~
+
+# eclipse setting files
+.settings/
+*.properties
+
+# iOS file
+.DS_store
+
+# gradle file
+.gradle/
+
+# idea file
+.idea/
