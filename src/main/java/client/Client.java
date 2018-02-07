@@ -3,6 +3,7 @@ package client;
 import counter.CodeCounter;
 import filter.JavaFileFilter;
 import listener.CodeCounterListener;
+import listener.CountResult;
 import option.CounterOption;
 
 import java.util.logging.Level;
@@ -11,9 +12,10 @@ import java.util.logging.Logger;
 public class Client {
     public static void main(String[] args) {
         CodeCounter codeCounter = new CodeCounter();
-        codeCounter.init("/Users/austin/Code");
+        codeCounter.init(".");
         codeCounter.setCounterOption(counterOption());
         codeCounter.addCodeCountListener(codeCounterListener);
+        Logger.getAnonymousLogger().log(Level.INFO, "start");
         codeCounter.count(new JavaFileFilter());
     }
 
@@ -27,13 +29,19 @@ public class Client {
         Logger logger = Logger.getAnonymousLogger();
 
         @Override
-        public void onCountSuccess(String countMessage) {
-            logger.log(Level.INFO, countMessage);
+        public void onCountResult(CountResult countResult, String countMessage) {
+            logger.log(Level.INFO, "onCountResult : " + countResult);
         }
 
         @Override
         public void onCountError(String errorMessage) {
             logger.log(Level.WARNING, errorMessage);
         }
+
+        @Override
+        public void onProgress(String progress) {
+            logger.log(Level.WARNING, "progress : " + progress);
+        }
     };
+
 }

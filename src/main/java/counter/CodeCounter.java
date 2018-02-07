@@ -1,19 +1,26 @@
 package counter;
 
+import constant.Constant;
 import filter.FileFilter;
 import filter.NullFileFilter;
+import listener.CountResult;
 import option.CounterOption;
 import option.CounterOptionHandler;
 import utils.ObjectUtils;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class CodeCounter extends BaseCodeCounter{
     private File currentFile;
     private StringBuffer mCountMessage;
     private CounterOption mCounterOption;
-    private int totalCount = 0;
+    private int totalLineCount = 0;
+    private double totalFileCount = 0;
+    private double currentFileCount = 0;
 
     public void init() {
         init(".");
@@ -34,10 +41,36 @@ public class CodeCounter extends BaseCodeCounter{
     }
 
     public void count(FileFilter fileFilter) {
+        traverseFileCalculateCount(currentFile, fileFilter);
+        notifyCodeCountListenerCountMessage(CountResult.INIT_DONE, "");
+        startProgressThread();
         traverseFile(currentFile, fileFilter);
         addTotalCount(mCountMessage);
-        notifyCodeCountListenerCountMessage(mCountMessage.toString());
+        onCounterFinish();
         handleCounterOption(mCounterOption, mCountMessage.toString());
+    }
+
+
+    private void traverseFileCalculateCount(File file, FileFilter fileFilter) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            ObjectUtils.checkNull(files, "files can't be null !");
+
+            Arrays.stream(files)
+                    .forEach(currentFile -> traverseFileCalculateCount(currentFile, fileFilter));
+        }
+        if (!file.isDirectory() && fileFilter.accept(file.getName())) {
+            totalFileCount++;
+        }
+    }
+
+
+    private ScheduledExecutorService scheduledExecutorService;
+    private void startProgressThread() {
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService.scheduleWithFixedDelay(
+                ()-> notifyCodeCountListenerProgress(String.format("%.2f", currentFileCount / totalFileCount)),
+                500, 500, TimeUnit.MILLISECONDS);
     }
 
     private void traverseFile(File file, FileFilter fileFilter) {
@@ -54,25 +87,33 @@ public class CodeCounter extends BaseCodeCounter{
     }
 
     private void countFile(File file) {
-        mCountMessage.append(file.getName()).append(" : ").append(countLine(file)).append("\n");
+        mCountMessage.append(file.getAbsolutePath()).append(" : ").append(countLine(file)).append("\n");
     }
 
     private String countLine(File file) {
-        int count = 0;
+        int currentLineCount = 0;
         try {
             LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
             while((lineNumberReader.readLine()) != null) {
-                count++;
-                totalCount++;
+                currentLineCount++;
+                totalLineCount++;
             }
+            lineNumberReader.close();
+            currentFileCount++;
         } catch (IOException e) {
             notifyCodeCountListenerErrorMessage(e.getMessage());
         }
-        return String.valueOf(count);
+        return String.valueOf(currentLineCount);
     }
 
     private void addTotalCount(StringBuffer mCountMessage) {
-        mCountMessage.append("Total line count : ").append(totalCount);
+        mCountMessage.append(Constant.LAST_LINE_PREFIX).append(totalLineCount);
+    }
+
+    private void onCounterFinish() {
+        scheduledExecutorService.shutdown();
+        notifyCodeCountListenerProgress(String.valueOf(1));
+        notifyCodeCountListenerCountMessage(CountResult.COUNT_FINISH, mCountMessage.toString());
     }
 
     private void handleCounterOption(CounterOption counterOption, String countMessage) {

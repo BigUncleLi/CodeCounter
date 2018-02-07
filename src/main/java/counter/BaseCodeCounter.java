@@ -1,6 +1,7 @@
 package counter;
 
 import listener.CodeCounterListener;
+import listener.CountResult;
 import utils.ObjectUtils;
 
 import java.util.ArrayList;
@@ -31,21 +32,32 @@ public class BaseCodeCounter {
         codeCounterListeners.clear();
     }
 
-    protected void notifyCodeCountListenerCountMessage(CodeCounterListener codeCounterListener, String countMessage) {
+    protected void notifyCodeCountListenerCountMessage(CodeCounterListener codeCounterListener,
+                                                       CountResult countResult, String countMessage) {
         ObjectUtils.checkNull(codeCounterListener, "codeCounterListener can't be null !");
-        codeCounterListener.onCountSuccess(countMessage);
+        codeCounterListener.onCountResult(countResult, countMessage);
     }
 
-    protected void notifyCodeCountListenerErrorMessage(CodeCounterListener codeCounterListener, String errorMessage) {
+    protected void notifyCodeCountListenerErrorMessage(CodeCounterListener codeCounterListener,
+                                                       CountResult countResult, String errorMessage) {
         ObjectUtils.checkNull(codeCounterListener, "codeCounterListener can't be null !");
-        codeCounterListener.onCountSuccess(errorMessage);
+        codeCounterListener.onCountResult(countResult, errorMessage);
     }
 
-    protected void notifyCodeCountListenerCountMessage(String countMessage) {
-        codeCounterListeners.forEach(codeCounterListener -> codeCounterListener.onCountSuccess(countMessage));
+    protected void notifyCodeCountListenerCountMessage(CountResult countResult, String countMessage) {
+        codeCounterListeners.forEach(codeCounterListener -> codeCounterListener.onCountResult(countResult, countMessage));
     }
 
     protected void notifyCodeCountListenerErrorMessage(String errorMessage) {
         codeCounterListeners.forEach(codeCounterListener -> codeCounterListener.onCountError(errorMessage));
+    }
+
+    protected void notifyCodeCountListenerProgress(CodeCounterListener codeCounterListener, String progress) {
+        ObjectUtils.checkNull(codeCounterListener, "codeCounterListener can't be null !");
+        codeCounterListener.onProgress(progress);
+    }
+
+    protected void notifyCodeCountListenerProgress(String progress) {
+        codeCounterListeners.forEach(codeCounterListener -> codeCounterListener.onProgress(progress));
     }
 }
