@@ -48,7 +48,7 @@ public class CodeCounter extends BaseCodeCounter{
             Arrays.stream(files)
                     .forEach(currentFile -> traverseFile(currentFile, fileFilter));
         }
-        if (fileFilter.accept(file.getName())) {
+        if (!file.isDirectory() && fileFilter.accept(file.getName())) {
             countFile(file);
         }
     }

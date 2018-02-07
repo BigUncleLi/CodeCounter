@@ -21,13 +21,17 @@ public class CounterOptionHandler {
     }
 
     private void initFile(File file) {
-        if (file.exists() && file.delete()) {
+        if (!file.exists() || existsAndDelete(file)) {
             try {
                 fileWriter = new FileWriter(file);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean existsAndDelete(File file) {
+        return file.exists() && file.delete();
     }
 
     private void writeBeginMessage() {
