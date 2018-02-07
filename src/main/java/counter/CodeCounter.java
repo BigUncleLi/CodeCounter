@@ -92,16 +92,24 @@ public class CodeCounter extends BaseCodeCounter{
 
     private String countLine(File file) {
         int currentLineCount = 0;
+        LineNumberReader lineNumberReader = null;
         try {
-            LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file));
+            lineNumberReader = new LineNumberReader(new FileReader(file));
             while((lineNumberReader.readLine()) != null) {
                 currentLineCount++;
                 totalLineCount++;
             }
-            lineNumberReader.close();
             currentFileCount++;
         } catch (IOException e) {
             notifyCodeCountListenerErrorMessage(e.getMessage());
+        } finally {
+            try {
+                if (lineNumberReader != null) {
+                    lineNumberReader.close();
+                }
+            } catch (IOException e) {
+                notifyCodeCountListenerErrorMessage(e.getMessage());
+            }
         }
         return String.valueOf(currentLineCount);
     }

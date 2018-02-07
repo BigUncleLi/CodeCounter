@@ -52,7 +52,9 @@ public class CounterOptionHandler {
 
     private void releaseResource() {
         try {
-            fileWriter.close();
+            if (fileWriter != null) {
+                fileWriter.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
